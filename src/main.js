@@ -118,8 +118,14 @@ function doneCount(id) {
 let view = 'home'
 let active = null
 const appEl = document.getElementById('app')
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+let scrollHandler = null
 
-function nav(v, id) { view = v; if (id) active = id; window.scrollTo(0, 0); render() }
+function nav(v, id) {
+  const go = () => { view = v; if (id) active = id; window.scrollTo(0, 0); render() }
+  if (!reduceMotion && document.startViewTransition) document.startViewTransition(go)
+  else go()
+}
 
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -130,18 +136,60 @@ function render() {
   if (view === 'day') renderDay()
   else if (view === 'guide') renderGuide()
   else renderHome()
+  enhance()
+}
+
+/* Post-render motion: scroll-reveal cards + hero parallax. All progressive —
+ * if any of this no-ops, the app is fully usable. */
+function enhance() {
+  const els = Array.from(appEl.querySelectorAll('.reveal'))
+  const reveal = e => e.classList.add('in')
+  if (reduceMotion || !('IntersectionObserver' in window)) { els.forEach(reveal); setupParallax(); return }
+
+  // Scroll-reveal for anything below the fold; on-screen elements reveal
+  // immediately (synchronously, so they're never caught hidden by a view
+  // transition or an idle observer).
+  const io = new IntersectionObserver((ents, obs) => {
+    ents.forEach(en => { if (en.isIntersecting) { reveal(en.target); obs.unobserve(en.target) } })
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 })
+  els.forEach(e => {
+    if (e.getBoundingClientRect().top < window.innerHeight * 0.98) reveal(e)
+    else io.observe(e)
+  })
+  // Safety net: content can never stay hidden even if the observer stalls.
+  window.setTimeout(() => els.forEach(reveal), 1200)
+
+  setupParallax()
+}
+
+function setupParallax() {
+  if (scrollHandler) { window.removeEventListener('scroll', scrollHandler); scrollHandler = null }
+  const hero = appEl.querySelector('[data-parallax]')
+  if (!hero || reduceMotion) return
+  let ticking = false
+  scrollHandler = () => {
+    if (ticking) return
+    ticking = true
+    requestAnimationFrame(() => {
+      const y = window.scrollY || window.pageYOffset || 0
+      hero.style.transform = `translateY(${(y * 0.22).toFixed(1)}px)`
+      hero.style.opacity = String(Math.max(0, 1 - y / 340))
+      ticking = false
+    })
+  }
+  window.addEventListener('scroll', scrollHandler, { passive: true })
 }
 
 function renderHome() {
   const nxt = nextDay()
-  const cards = ORDER.map(id => {
+  const cards = ORDER.map((id, ix) => {
     const d = DAYS[id]
     const total = flat(id).length
     const done = doneCount(id)
     let badge = ''
     if (done > 0) badge = `<span class="badge prog num">${done}/${total}</span>`
     else if (id === nxt) badge = `<span class="badge next">Up next</span>`
-    return `<button class="daycard ${id === nxt && done === 0 ? 'next' : ''}" data-day="${id}">
+    return `<button class="daycard glass reveal ${id === nxt && done === 0 ? 'next' : ''}" data-day="${id}" style="--i:${ix}">
       <div class="dc-top">
         <span class="dc-no">${d.no}</span>
         <span class="dc-title">${esc(d.title)}</span>
@@ -153,15 +201,15 @@ function renderHome() {
 
   appEl.innerHTML = `
     <div class="app">
-      <div class="hero">
+      <div class="hero" data-parallax>
         <div class="mono" style="margin-bottom:14px">${esc(PROGRAM)} / Recomposition</div>
         <div class="word">Ready to<br><b>train.</b></div>
         <div class="sub">Pick today's session. Last week's weights are remembered, so you always know the number to <b>beat</b>.</div>
       </div>
-      <div class="uplabel">The week &mdash; up next is <b style="color:var(--amber)">${esc(DAYS[nxt].title)}</b></div>
+      <div class="uplabel">The week &mdash; up next is <b>${esc(DAYS[nxt].title)}</b></div>
       ${cards}
       <div class="homelinks">
-        <button class="linkcard" data-go="guide">
+        <button class="linkcard glass reveal" style="--i:5" data-go="guide">
           <div class="k">Reference</div>
           <div class="t">Guide &amp; fuel</div>
           <div class="d">Principles, shoulder rules, how to progress, nutrition, conditioning.</div>
@@ -205,7 +253,7 @@ function renderDay() {
         <div class="grow"></div>
         <button class="bar-btn accent" data-finish>Finish</button>
       </div>
-      <div class="day-hd">
+      <div class="day-hd reveal">
         <h2>${esc(d.title)}</h2>
         <div class="sub">${esc(d.sub)}</div>
         <div class="meta">
@@ -252,7 +300,7 @@ function exRow(e, idx, checks, cur, last, during) {
     : (e.g ? `<span class="ex-g">${esc(e.g)}</span>` : '')
   const lastVal = last[idx]
   const curVal = cur[idx] || ''
-  return `<div class="ex ${done ? 'done' : ''} ${during ? 'during' : ''}" data-idx="${idx}">
+  return `<div class="ex glass ${done ? 'done' : ''} ${during ? 'during' : ''}" data-idx="${idx}">
     <button class="ex-tap" data-idx="${idx}" aria-pressed="${done}">
       <span class="tick"></span>
       <span class="ex-body">
@@ -306,12 +354,12 @@ function renderGuide() {
 
       <div class="sec-head"><span class="idx">00</span><h3>The two levers</h3></div>
       <div class="levers">
-        <div class="lever"><div class="k">The gym</div><h4>Progressive overload</h4><p>Lift hard, add weight or reps over time. The signal that tells your body to keep the muscle - and build more.</p></div>
-        <div class="lever"><div class="k">The kitchen</div><h4>Slight deficit, high protein</h4><p>Fat loss is decided here, not on the treadmill. Eat a little under maintenance, keep protein high, fat comes off while muscle stays.</p></div>
+        <div class="lever glass reveal"><div class="k">The gym</div><h4>Progressive overload</h4><p>Lift hard, add weight or reps over time. The signal that tells your body to keep the muscle - and build more.</p></div>
+        <div class="lever glass reveal"><div class="k">The kitchen</div><h4>Slight deficit, high protein</h4><p>Fat loss is decided here, not on the treadmill. Eat a little under maintenance, keep protein high, fat comes off while muscle stays.</p></div>
       </div>
 
       <div class="sec-head"><span class="idx">01</span><h3>How the hour works</h3></div>
-      <div class="note-card">
+      <div class="note-card glass reveal">
         <p class="lead"><b>Supersets beat the clock.</b> Movements share a letter (A1 / A2) - do a set of A1, ~60-90s rest, a set of A2, repeat. One muscle recovers while its partner works.</p>
         <div class="timemap">
           <span class="tm">Upper A <b>~44m</b></span><span class="tm">Lower A <b>~43m</b></span><span class="tm">Upper B <b>~44m</b></span><span class="tm">Lower B <b>~43m</b></span>
@@ -320,13 +368,13 @@ function renderGuide() {
       </div>
 
       <div class="sec-head"><span class="idx">02</span><h3>Shoulder rules</h3></div>
-      <div class="callout">
+      <div class="callout reveal">
         <div class="k">Every session</div>
         <p><b>Press to controlled depth, not a deep stretch</b> (elbows to torso level, no lower). <b>Raises and overhead work stay under the painful arc.</b> If a movement is sharp pain rather than muscle fatigue, stop and use the pec-deck / seated-machine-press fallbacks. This manages around a sensitive shoulder - it does not replace a clinician's look.</p>
       </div>
 
       <div class="sec-head"><span class="idx">03</span><h3>Fuel</h3></div>
-      <div class="note-card"><div class="rows">
+      <div class="note-card glass reveal"><div class="rows">
         <div class="row"><span class="lead">01</span><span class="txt"><b>Slight deficit.</b> <span class="m">~250-500 kcal under maintenance - or maintenance while you are new, since beginners recomp well. Do not crash it.</span></span></div>
         <div class="row"><span class="lead">02</span><span class="txt"><b>Protein first.</b> <span class="m">~0.8-1 g per lb of bodyweight, every day. It is what protects muscle in a deficit.</span></span></div>
         <div class="row"><span class="lead">03</span><span class="txt"><b>Build the plate.</b> <span class="m">Protein + vegetables + a fist or two of carbs around training. Mostly whole foods.</span></span></div>
@@ -334,7 +382,7 @@ function renderGuide() {
       </div></div>
 
       <div class="sec-head"><span class="idx">04</span><h3>How to progress</h3></div>
-      <div class="note-card"><div class="rows">
+      <div class="note-card glass reveal"><div class="rows">
         <div class="row"><span class="lead">1</span><span class="txt"><span class="m">Pick a weight you can hit the <b>bottom</b> of the rep range with clean form.</span></span></div>
         <div class="row"><span class="lead">2</span><span class="txt"><span class="m">Add reps each session until you hit the <b>top</b> of the range on every set, two sessions running.</span></span></div>
         <div class="row"><span class="lead">3</span><span class="txt"><span class="m">Then add the <b>smallest increment</b> and drop back to the bottom.</span></span></div>
@@ -342,7 +390,7 @@ function renderGuide() {
       </div></div>
 
       <div class="sec-head"><span class="idx">05</span><h3>Reading the results</h3></div>
-      <div class="note-card"><div class="rows">
+      <div class="note-card glass reveal"><div class="rows">
         <div class="row"><span class="lead steel">Daily</span><span class="txt"><b>Bodyweight</b> <span class="m">- same time each morning. Watch the weekly average, ignore daily noise.</span></span></div>
         <div class="row"><span class="lead steel">Weekly</span><span class="txt"><b>Logbook</b> <span class="m">- your numbers should climb. The clearest sign it is working.</span></span></div>
         <div class="row"><span class="lead steel">Monthly</span><span class="txt"><b>Photos</b> <span class="m">- one set every 4 weeks, same spot and light.</span></span></div>
@@ -350,7 +398,7 @@ function renderGuide() {
       </div></div>
 
       <div class="sec-head"><span class="idx">06</span><h3>Conditioning</h3></div>
-      <div class="note-card"><div class="rows">
+      <div class="note-card glass reveal"><div class="rows">
         ${cond.map(([l, t]) => `<div class="row"><span class="lead steel" style="width:56px">${l}</span><span class="txt">${t}</span></div>`).join('')}
       </div></div>
 
