@@ -137,6 +137,7 @@ function renderHome() {
 
   appEl.innerHTML = `<div class="app">
     <div class="home-head">
+      <img class="mark" src="/reps/mark.svg" alt="" />
       <div class="eyebrow">${esc(PROGRAM)}</div>
       <h1>This week.</h1>
       <div class="sub">Five sessions. Tap today's — your numbers are already set.</div>
@@ -144,7 +145,10 @@ function renderHome() {
     <div class="ready"><span class="ready-lab">Readiness</span>${oScore ? `<span class="ready-oura">Oura <b>${oScore}</b></span>` : ''}<div class="ready-seg">${segs}</div></div>
     ${watchLine}
     <nav class="week">${rows}</nav>
-    <div class="home-foot"><b>Start honest.</b> Log what you actually lift — it's what tomorrow's targets are built from. <a data-go="guide">How it works ›</a></div>
+    <div class="home-foot">
+      <img class="wm" src="/reps/wordmark.svg" alt="coregular" />
+      <span class="fx">Log honestly — it's what tomorrow's targets are built from. <a data-go="guide">How it works ›</a></span>
+    </div>
   </div>`
 
   appEl.querySelectorAll('.drow').forEach(el => el.addEventListener('click', () => nav('day', el.dataset.day)))

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="274 31 682 178" width="682" height="178"><g transform="translate(280, 175)" stroke="#F4EFE4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <g transform="translate(0, 0)"><path d="M 88 -74 A 45 45 0 1 0 88 -26"/></g>
+    <g transform="translate(95, 0)"><circle cx="50" cy="-50" r="45"/></g>
+    <g transform="translate(195, 0)"><line x1="6" y1="0" x2="6" y2="-100"/><path d="M 6 -100 A 22 22 0 0 1 28 -78"/></g>
+    <g transform="translate(240, 0)"><circle cx="50" cy="-50" r="45"/><line x1="14" y1="-50" x2="86" y2="-50"/></g>
+    <g transform="translate(335, 0)"><circle cx="42" cy="-55" r="38"/><line x1="80" y1="-55" x2="80" y2="20"/><path d="M 80 20 A 18 18 0 0 1 62 30"/></g>
+    <g transform="translate(425, 0)"><path d="M 6 -100 L 6 -42 A 44 42 0 0 0 94 -42 L 94 -100"/></g>
+    <g transform="translate(530, 0)"><line x1="6" y1="0" x2="6" y2="-140"/></g>
+    <g transform="translate(550, 0)"><circle cx="40" cy="-50" r="40"/><line x1="80" y1="0" x2="80" y2="-92"/></g>
+    <g transform="translate(640, 0)"><line x1="6" y1="0" x2="6" y2="-100"/><path d="M 6 -100 A 22 22 0 0 1 28 -78"/></g>
+  </g></svg>
