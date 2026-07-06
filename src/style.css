@@ -189,8 +189,8 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; font-weight: 700; letter-spacing
 .block-kind { color: var(--faint); }
 
 .ex {
-  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 13px; width: 100%; text-align: left;
-  border-radius: 18px; padding: 15px 15px; margin-bottom: 10px;
+  display: flex; flex-direction: column; width: 100%; text-align: left;
+  border-radius: 18px; padding: 15px; margin-bottom: 11px;
   transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
 }
 .ex-tap { display: flex; align-items: flex-start; gap: 13px; flex: 1 1 auto; min-width: 0;
@@ -296,3 +296,76 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; font-weight: 700; letter-spacing
   .reveal { opacity: 1; transform: none; }
   .glow { animation: none; }
 }
+
+/* ============ coaching UI ============ */
+:root { --warn: #E0795A; }
+
+/* exercise header row */
+.ex-main { display: flex; align-items: flex-start; gap: 12px; }
+.ex-scheme { flex: none; font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 2px; }
+.ex-scheme span { color: var(--hush); }
+.ex-top { row-gap: 6px; }
+
+/* state chip */
+.chip { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; padding: 3px 8px; border-radius: 20px; flex: none; }
+.chip.up { color: #1c0f06; background: var(--amber-grad); }
+.chip.hold { color: var(--steel); background: rgba(127,168,190,0.16); }
+.chip.ease { color: var(--steel); background: rgba(127,168,190,0.16); }
+.chip.repeat { color: var(--amber-2); background: var(--amber-soft); }
+.chip.deload { color: #F0B892; background: rgba(224,121,90,0.20); }
+.chip.new { color: var(--muted); background: rgba(255,255,255,0.06); }
+
+/* prescription band — the headline number */
+.rx { margin-top: 12px; padding: 11px 14px; border-radius: 13px; background: rgba(0,0,0,0.28); border: 1px solid var(--glass-line-2); }
+.rx-head { display: flex; align-items: baseline; gap: 9px; }
+.rx-w { font-size: 1.72rem; font-weight: 800; letter-spacing: -0.035em; color: var(--chalk); font-variant-numeric: tabular-nums; line-height: 1; }
+.rx-w .u { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-left: 3px; letter-spacing: 0; }
+.rx-w.new { font-size: 1.18rem; color: var(--amber-2); }
+.rx-x { font-family: var(--font-mono); font-size: 1rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rx-why { font-size: 0.82rem; color: var(--amber-2); font-weight: 500; margin-top: 5px; line-height: 1.4; }
+
+/* log row */
+.logrow { display: flex; align-items: center; gap: 11px; margin-top: 12px; }
+.lf-wrap { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; }
+.lf { width: 66px; background: rgba(0,0,0,0.32); border: 1px solid var(--glass-line); border-radius: 10px; color: var(--chalk); font-family: var(--font-mono); font-size: 0.98rem; font-variant-numeric: tabular-nums; padding: 10px; text-align: center; }
+.lf-r { width: 54px; }
+.lf::placeholder { color: var(--hush); }
+.lf:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(255,122,51,0.16); }
+.lf-x { color: var(--hush); font-family: var(--font-mono); }
+.lf-u { color: var(--muted); font-family: var(--font-mono); font-size: 0.82rem; }
+.hit { flex: none; min-height: 44px; border: none; border-radius: 12px; padding: 0 20px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  background: var(--amber-grad); color: #1c0f06; box-shadow: 0 6px 18px -8px rgba(255,122,51,0.65);
+  transition: transform 0.18s var(--spring), filter 0.18s var(--ease); }
+.hit:hover { filter: brightness(1.05); }
+.hit:active { transform: scale(0.95); }
+.hit:focus-visible { outline: 2px solid var(--chalk); outline-offset: 2px; }
+.hit[aria-pressed="true"] { background: rgba(95,197,150,0.15); color: var(--ok); box-shadow: none; border: 1px solid rgba(95,197,150,0.4); }
+
+.ex.done { border-color: rgba(95,197,150,0.32); background: rgba(95,197,150,0.05); }
+.ex.done .ex-name { color: var(--chalk); text-decoration: none; }
+.ex.done .rx { opacity: 0.5; }
+.ex.nudge { animation: nudge 0.4s var(--ease); }
+@keyframes nudge { 0%,100% { transform: none; } 20% { transform: translateX(-6px); } 60% { transform: translateX(6px); } }
+
+/* readiness card */
+.readycard { border-radius: 18px; padding: 16px; margin-bottom: 16px; }
+.rd-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.rd-head .k { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber-2); flex: none; }
+.rd-src { font-size: 0.8rem; color: var(--muted); text-align: right; }
+.rd-src b { color: var(--chalk); font-weight: 600; }
+.rd-row { display: flex; gap: 8px; }
+.rd { flex: 1 1 0; min-height: 44px; padding: 11px; border-radius: 12px; border: 1px solid var(--glass-line); background: rgba(255,255,255,0.03); color: var(--muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s var(--spring), background 0.15s var(--ease), color 0.15s var(--ease); }
+.rd:hover { color: var(--chalk); }
+.rd:active { transform: scale(0.96); }
+.rd:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.rd.on.fried { color: #F0B892; background: rgba(224,121,90,0.16); border-color: rgba(224,121,90,0.42); }
+.rd.on.solid { color: var(--steel); background: rgba(127,168,190,0.16); border-color: rgba(127,168,190,0.42); }
+.rd.on.primed { color: #1c0f06; background: var(--amber-grad); border-color: transparent; }
+
+/* insight cards */
+.insight { border-radius: 16px; padding: 14px 15px; margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start; }
+.ins-k { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; padding: 4px 8px; border-radius: 6px; flex: none; }
+.insight.stall .ins-k { color: #F0B892; background: rgba(224,121,90,0.18); }
+.insight.fly .ins-k { color: var(--ok); background: rgba(95,197,150,0.16); }
+.ins-t { font-size: 0.9rem; color: var(--chalk); line-height: 1.45; }
+.ins-t .m { color: var(--muted); }

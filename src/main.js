@@ -1,9 +1,11 @@
 import './style.css'
 
 /* ------------------------------------------------------------------ *
- * Reps — a local-first training app. All state lives in localStorage;
- * there is no backend and no account. The program below is "Base Block"
- * (a 4-day recomposition block, no barbell bench, ~45 min sessions).
+ * Reps — a coaching app, not a logbook. It reads your history and the
+ * progression rules and tells you today's exact weight and reps for every
+ * lift, adjusts for how recovered you are, and flags what's stalling.
+ * All local (localStorage). Program below = "Base Block" (recomp, no
+ * barbell bench, ~45-min sessions).
  * ------------------------------------------------------------------ */
 
 const PROGRAM = 'Base Block'
@@ -14,20 +16,20 @@ const DAYS = {
     no: '01', title: 'Upper A', sub: 'Strength lean / lower reps on the main press and pull', min: '~44 min',
     blocks: [
       { key: 'A', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'A1', n: 'Machine chest press', s: '4', r: '6-8', note: 'Primary bench replacement. Handles at mid-chest, shoulder blades pinned back and down, elbows ~45 deg, controlled lockout - no slam.' },
-        { g: 'A2', n: 'Chest-supported machine row', s: '4', r: '6-8', note: 'Antagonist to the press. Pull to the lower ribs, 1s squeeze; the chest pad takes the low back out of it.' },
+        { g: 'A1', n: 'Machine chest press', s: '4', r: '6-8', inc: 5, note: 'Primary bench replacement. Handles at mid-chest, shoulder blades pinned back and down, elbows ~45 deg, controlled lockout.' },
+        { g: 'A2', n: 'Chest-supported machine row', s: '4', r: '6-8', inc: 5, note: 'Pull to the lower ribs, 1s squeeze; the chest pad takes the low back out of it.' },
       ] },
       { key: 'B', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'B1', n: 'Incline neutral-grip DB press', s: '3', r: '8-10', note: 'Palms in to spare the front delt; upper-chest emphasis. Depth cap: stop when elbows reach torso level, no deep stretch.' },
-        { g: 'B2', n: 'Lat pulldown (neutral / shoulder-width grip)', s: '3', r: '8-10', note: 'Neutral-close grip is shoulder-friendlier than wide. Drive elbows to the ribs, chest tall, no swing.' },
+        { g: 'B1', n: 'Incline neutral-grip DB press', s: '3', r: '8-10', inc: 5, note: 'Palms in to spare the front delt. Depth cap: stop when elbows reach torso level, no deep stretch.' },
+        { g: 'B2', n: 'Lat pulldown (neutral / shoulder-width grip)', s: '3', r: '8-10', inc: 10, note: 'Neutral-close grip is shoulder-friendlier than wide. Drive elbows to the ribs, chest tall.' },
       ] },
       { key: 'C', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'C1', n: 'Cable lateral raise', s: '4', r: '12-15', note: 'Stop below shoulder height (~60-75 deg) - stay under the painful arc. Lead with the elbow, no shrug or swing.' },
-        { g: 'C2', n: 'Face pull', s: '3', r: '15-20', note: 'Anchor at chest height, pull to the collarbone, upper arms below shoulder height. Rear-delt + cuff insurance - keep it light.' },
+        { g: 'C1', n: 'Cable lateral raise', s: '4', r: '12-15', inc: 5, note: 'Stop below shoulder height (~60-75 deg). Lead with the elbow, no shrug or swing.' },
+        { g: 'C2', n: 'Face pull', s: '3', r: '15-20', inc: 5, note: 'Anchor at chest height, pull to the collarbone, upper arms below shoulder height. Keep it light.' },
       ] },
       { key: 'D', opt: true, kind: 'Optional / drop first if short on time', ex: [
-        { g: 'D1', n: 'DB or cable biceps curl', s: '3', r: '8-12', note: 'Direct biceps. Elbows pinned, control the lowering.' },
-        { g: 'D2', n: 'Cable triceps pushdown', s: '3', r: '10-12', note: 'Direct triceps. Elbows tucked, full lockout.' },
+        { g: 'D1', n: 'DB or cable biceps curl', s: '3', r: '8-12', inc: 5, note: 'Elbows pinned, control the lowering.' },
+        { g: 'D2', n: 'Cable triceps pushdown', s: '3', r: '10-12', inc: 5, note: 'Elbows tucked, full lockout.' },
       ] },
     ],
   },
@@ -35,15 +37,15 @@ const DAYS = {
     no: '02', title: 'Lower A', sub: 'Squat focus / knee-dominant main lift', min: '~43 min',
     blocks: [
       { key: 'A', kind: 'Straight sets / ~2 min rest', ex: [
-        { g: 'A', n: 'Hack squat (or leg press if it is taken)', s: '4', r: '6-10', note: 'Main quad compound. Controlled full depth, drive through mid-foot, no bounce out of the bottom.' },
-      ], during: { n: 'Weighted plank or dead bug', s: '3', r: '30-45s', note: 'Done during the hack-squat rest periods - costs no extra time. Brace hard, ribs down.' } },
+        { g: 'A', n: 'Hack squat', s: '4', r: '6-10', inc: 10, note: 'Or leg press if it is taken. Controlled full depth, drive through mid-foot, no bounce.' },
+      ], during: { n: 'Weighted plank or dead bug', s: '3', r: '30-45s', note: 'During the hack-squat rest — costs no extra time. Brace hard, ribs down.' } },
       { key: 'B', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'B1', n: 'Seated leg curl', s: '3', r: '10-12', note: 'Hamstring, pause at full flexion.' },
-        { g: 'B2', n: 'DB walking lunge (or split squat)', s: '3', r: '10-12/leg', note: 'Longest item of the day. Long stride, tall torso; if form breaks under fatigue, cut the last set.' },
+        { g: 'B1', n: 'Seated leg curl', s: '3', r: '10-12', inc: 10, note: 'Hamstring, pause at full flexion.' },
+        { g: 'B2', n: 'DB walking lunge', s: '3', r: '10-12/leg', inc: 5, note: 'Or split squat. Long stride, tall torso; cut the last set if form breaks.' },
       ] },
       { key: 'C', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'C1', n: 'Leg extension', s: '3', r: '12-15', note: 'Quad isolation, 1s squeeze at the top.' },
-        { g: 'C2', n: 'Standing calf raise', s: '3', r: '12-15', note: 'Full stretch at the bottom, 1s pause. Gastroc emphasis.' },
+        { g: 'C1', n: 'Leg extension', s: '3', r: '12-15', inc: 10, note: 'Quad isolation, 1s squeeze at the top.' },
+        { g: 'C2', n: 'Standing calf raise', s: '3', r: '12-15', inc: 10, note: 'Full stretch at the bottom, 1s pause.' },
       ] },
     ],
   },
@@ -51,16 +53,16 @@ const DAYS = {
     no: '03', title: 'Upper B', sub: 'Hypertrophy lean / more reps across fast pairs', min: '~44 min',
     blocks: [
       { key: 'A', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'A1', n: 'Flat neutral-grip DB press', s: '3', r: '10-12', note: 'Palms in throughout; elbows ~45 deg. Depth cap: stop when elbows reach torso level. Main horizontal press this day.' },
-        { g: 'A2', n: 'Seated cable row', s: '3', r: '10-12', note: 'Neutral handle, full stretch at the front, 1s squeeze at the back.' },
+        { g: 'A1', n: 'Flat neutral-grip DB press', s: '3', r: '10-12', inc: 5, note: 'Palms in throughout; elbows ~45 deg. Depth cap at torso level.' },
+        { g: 'A2', n: 'Seated cable row', s: '3', r: '10-12', inc: 10, note: 'Neutral handle, full stretch at the front, 1s squeeze at the back.' },
       ] },
       { key: 'B', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'B1', n: 'Landmine press (half-kneeling or standing)', s: '3', r: '10-12', note: 'Only vertical press of the week. Press in the scapular plane, stop short of full lockout. Any overhead discomfort means switch to the seated neutral-grip machine press.' },
-        { g: 'B2', n: 'Lat pulldown, underhand', s: '3', r: '10-12', note: 'Elbows to hips; lats plus a biceps assist.' },
+        { g: 'B1', n: 'Landmine press', s: '3', r: '10-12', inc: 5, note: 'Half-kneeling or standing. Scapular plane, stop short of full lockout. Any overhead pinch means switch to a seated neutral-grip machine press.' },
+        { g: 'B2', n: 'Lat pulldown, underhand', s: '3', r: '10-12', inc: 10, note: 'Elbows to hips; lats plus a biceps assist.' },
       ] },
       { key: 'C', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'C1', n: 'Cable lateral raise', s: '4', r: '15-20', note: 'Stop below shoulder height. Constant tension, high reps, honest light load. Second side-delt session of the week.' },
-        { g: 'C2', n: 'Pec-deck fly', s: '3', r: '12-15', note: 'Shoulder-sparing chest isolation - the pain-free fallback if any press must be pulled. Controlled, no overstretch. (Swap to reverse pec-deck for rear delts if chest feels covered.)' },
+        { g: 'C1', n: 'Cable lateral raise', s: '4', r: '15-20', inc: 5, note: 'Stop below shoulder height. Constant tension, high reps, honest light load.' },
+        { g: 'C2', n: 'Pec-deck fly', s: '3', r: '12-15', inc: 5, note: 'Shoulder-sparing chest isolation — the fallback if any press must be pulled. No overstretch.' },
       ] },
     ],
   },
@@ -68,22 +70,20 @@ const DAYS = {
     no: '04', title: 'Lower B', sub: 'Hinge / glute focus / hip-dominant main lift', min: '~43 min',
     blocks: [
       { key: 'A', kind: 'Straight sets / ~2 min rest', ex: [
-        { g: 'A', n: 'DB or trap-bar RDL', s: '4', r: '8-10', note: 'Main hinge. Soft knees, hips back, flat back, feel the hamstring stretch, stop 1-2 reps shy. Trap-bar is easiest to load. (Back-extension or hinge machine if loading the spine is undesirable.)' },
-      ], during: { n: 'Pallof press (anti-rotation)', s: '3', r: '10-12/side', note: 'Done during the RDL rest periods - time-neutral. Brace and resist the pull, no twisting.' } },
+        { g: 'A', n: 'DB or trap-bar RDL', s: '4', r: '8-10', inc: 10, note: 'Soft knees, hips back, flat back, feel the hamstring stretch, stop 1-2 reps shy. Trap-bar is easiest to load.' },
+      ], during: { n: 'Pallof press', s: '3', r: '10-12/side', note: 'Anti-rotation, during the RDL rest. Brace and resist the pull, no twisting.' } },
       { key: 'B', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'B1', n: 'Machine or barbell hip thrust', s: '3', r: '10-12', note: 'Glute-dominant. Full lockout, 1s squeeze, chin tucked, do not hyperextend the low back.' },
-        { g: 'B2', n: 'Leg press, feet high and wide', s: '3', r: '12-15', note: 'High/wide stance shifts to glutes and hams with zero spinal load. Do not let the low back round off the pad.' },
+        { g: 'B1', n: 'Machine or barbell hip thrust', s: '3', r: '10-12', inc: 10, note: 'Full lockout, 1s squeeze, chin tucked, do not hyperextend the low back.' },
+        { g: 'B2', n: 'Leg press, feet high and wide', s: '3', r: '12-15', inc: 10, note: 'Shifts to glutes and hams with zero spinal load. Do not let the low back round off the pad.' },
       ] },
       { key: 'C', kind: 'Superset / alternate, 60-90s rest', ex: [
-        { g: 'C1', n: 'Lying or seated leg curl', s: '3', r: '12-15', note: 'Control the negative; second hamstring angle for the week.' },
-        { g: 'C2', n: 'Seated calf raise', s: '3', r: '15-20', note: 'Bent-knee soleus emphasis, pause top and bottom - complements the standing raise on Lower A.' },
+        { g: 'C1', n: 'Lying or seated leg curl', s: '3', r: '12-15', inc: 10, note: 'Control the negative; second hamstring angle for the week.' },
+        { g: 'C2', n: 'Seated calf raise', s: '3', r: '15-20', inc: 10, note: 'Bent-knee soleus emphasis, pause top and bottom.' },
       ] },
     ],
   },
 }
 
-/* Flatten a day into an ordered list of exercises (including the during-rest
- * core item), so each has a stable index for checks + logging. */
 function flat(id) {
   const out = []
   for (const b of DAYS[id].blocks) {
@@ -94,29 +94,104 @@ function flat(id) {
 }
 
 /* ---------------- storage ---------------- */
-const KEY = 'reps.v1'
+const KEY = 'reps.v2'
 let store = read()
-function read() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch { return {} }
-}
-store.checks ||= {}
-store.cur ||= {}
-store.last ||= {}
-function save() { try { localStorage.setItem(KEY, JSON.stringify(store)) } catch { /* private mode */ } }
+function read() { try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch { return {} } }
+store.history ||= {}     // history[dayId][idx] = [{ d, w, r }]  (oldest -> newest)
+store.session ||= {}     // session[dayId][idx] = { w, r, done }  (in progress today)
+store.readiness ||= {}   // readiness[YYYY-MM-DD] = 'fried' | 'solid' | 'primed'
+store.oura ||= {}        // oura[YYYY-MM-DD] = { level } — drop-in slot for the Vitals/Oura feed
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)) } catch {} }
+
+function today() { return new Date().toISOString().slice(0, 10) }
+function round5(x) { return Math.max(5, Math.round(x / 5) * 5) }
 
 function nextDay() {
   if (!store.lastFinished) return 'ua'
-  const i = ORDER.indexOf(store.lastFinished)
-  return ORDER[(i + 1) % ORDER.length]
+  return ORDER[(ORDER.indexOf(store.lastFinished) + 1) % ORDER.length]
 }
-function doneCount(id) {
-  const c = store.checks[id] || {}
-  return Object.keys(c).filter(k => c[k]).length
+function hist(dayId, i) { return ((store.history[dayId] || {})[i]) || [] }
+
+/* ---------------- the coach ---------------- */
+// Today's readiness — Oura feed if present, else the manual check-in, else neutral.
+function readiness() {
+  const t = today()
+  if (store.oura[t]) return { level: store.oura[t].level, source: 'oura' }
+  if (store.readiness[t]) return { level: store.readiness[t], source: 'you' }
+  return { level: 'solid', source: 'default' }
+}
+const READY = { fried: 'Fried', solid: 'Solid', primed: 'Primed' }
+
+function parseRange(r) {
+  const s = String(r)
+  const isTime = /\d\s*s\b/i.test(s) || /\ds/i.test(s)
+  const m = s.match(/(\d+)\s*[-–]\s*(\d+)/)
+  let lo, hi
+  if (m) { lo = +m[1]; hi = +m[2] } else { const n = s.match(/(\d+)/); lo = hi = n ? +n[1] : 8 }
+  return { lo, hi, unit: isTime ? 'time' : 'reps', perSide: /\/(leg|side)/i.test(s) }
+}
+
+// The prescription for one exercise today: what weight, what reps, and why.
+function prescribe(dayId, i, ex) {
+  const pr = parseRange(ex.r)
+  const h = hist(dayId, i)
+  const last = h[h.length - 1]
+  const rd = readiness().level
+
+  // Time-based holds (planks, etc.) — progress by seconds, no load.
+  if (pr.unit === 'time') {
+    if (!last) return { unit: 'time', reps: pr.lo, state: 'new', why: `First time — hold ${pr.lo}s, add time as it gets easy.`, pr }
+    if (last.r >= pr.hi) return { unit: 'time', reps: pr.hi, state: 'hold', why: `Solid at ${last.r}s — hold ${pr.hi}s or add a little load.`, pr }
+    return { unit: 'time', reps: Math.min(pr.hi, last.r + 5), state: 'up', why: `Beat last time: ${last.r}s → ${Math.min(pr.hi, last.r + 5)}s.`, pr }
+  }
+
+  let weight = null, reps = pr.lo, state = 'new', why = ''
+  if (!last) {
+    why = `First time — pick a weight you can do ~${pr.lo} clean reps with, 1-2 in reserve.`
+  } else {
+    const W = last.w, R = last.r, inc = ex.inc || 5
+    if (R >= pr.hi) { weight = W + inc; reps = pr.lo; state = 'up'; why = `Up from ${W} — you hit ${R} last time.` }
+    else if (R >= pr.lo) { weight = W; reps = Math.min(pr.hi, R + 1); state = 'hold'; why = `Same ${W} — beat ${R} reps.` }
+    else {
+      const prev = h[h.length - 2]
+      const missedTwice = prev && prev.w >= W && prev.r < pr.lo
+      if (missedTwice) { weight = round5(W * 0.9); reps = pr.lo; state = 'deload'; why = `Deload ${W} → ${round5(W * 0.9)} — two misses, reset and rebuild.` }
+      else { weight = W; reps = pr.lo; state = 'repeat'; why = `Repeat ${W} — get all sets to ${pr.lo} first.` }
+    }
+    // Autoregulate to readiness
+    if (rd === 'fried') {
+      if (state === 'up') { weight = W; reps = pr.lo; state = 'ease'; why = `Low readiness — hold ${W} today, take the jump next time.` }
+      else if (state === 'hold' || state === 'repeat') { weight = round5(weight * 0.92); state = 'ease'; why = `Low readiness — ~8% lighter, leave it in the tank.` }
+    } else if (rd === 'primed' && state === 'hold') {
+      why += ' Primed — chase a rep PR.'
+    }
+  }
+  return { unit: 'reps', weight, reps, state, why, pr }
+}
+
+// Self-evolving: read every exercise's trend and surface what's stalling.
+function insights() {
+  const out = []
+  for (const dayId of ORDER) {
+    flat(dayId).forEach((ex, i) => {
+      const h = hist(dayId, i)
+      if (h.length < 3) return
+      const w = h.slice(-3).map(e => e.w)
+      const r = h.slice(-3).map(e => e.r)
+      const noWeightGain = w[2] <= w[0]
+      const noRepGain = r[2] <= r[0]
+      if (noWeightGain && noRepGain) {
+        out.push({ dayId, exName: ex.n, kind: 'stall', text: `${ex.n} hasn't moved in 3 sessions.`, fix: 'Deload 10%, swap the variation, or add a set.' })
+      } else if (w[2] > w[0] && w[1] > w[0]) {
+        out.push({ dayId, exName: ex.n, kind: 'fly', text: `${ex.n} is climbing fast.`, fix: 'Take bigger jumps — it can handle it.' })
+      }
+    })
+  }
+  return out.slice(0, 4)
 }
 
 /* ---------------- view state ---------------- */
-let view = 'home'
-let active = null
+let view = 'home', active = null
 const appEl = document.getElementById('app')
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 let scrollHandler = null
@@ -126,12 +201,8 @@ function nav(v, id) {
   if (!reduceMotion && document.startViewTransition) document.startViewTransition(go)
   else go()
 }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') }
 
-function esc(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-}
-
-/* ---------------- render ---------------- */
 function render() {
   if (view === 'day') renderDay()
   else if (view === 'guide') renderGuide()
@@ -139,271 +210,246 @@ function render() {
   enhance()
 }
 
-/* Post-render motion: scroll-reveal cards + hero parallax. All progressive —
- * if any of this no-ops, the app is fully usable. */
 function enhance() {
   const els = Array.from(appEl.querySelectorAll('.reveal'))
   const reveal = e => e.classList.add('in')
   if (reduceMotion || !('IntersectionObserver' in window)) { els.forEach(reveal); setupParallax(); return }
-
-  // Scroll-reveal for anything below the fold; on-screen elements reveal
-  // immediately (synchronously, so they're never caught hidden by a view
-  // transition or an idle observer).
-  const io = new IntersectionObserver((ents, obs) => {
-    ents.forEach(en => { if (en.isIntersecting) { reveal(en.target); obs.unobserve(en.target) } })
-  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 })
-  els.forEach(e => {
-    if (e.getBoundingClientRect().top < window.innerHeight * 0.98) reveal(e)
-    else io.observe(e)
-  })
-  // Safety net: content can never stay hidden even if the observer stalls.
+  const io = new IntersectionObserver((ents, obs) => { ents.forEach(en => { if (en.isIntersecting) { reveal(en.target); obs.unobserve(en.target) } }) }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 })
+  els.forEach(e => { if (e.getBoundingClientRect().top < window.innerHeight * 0.98) reveal(e); else io.observe(e) })
   window.setTimeout(() => els.forEach(reveal), 1200)
-
   setupParallax()
 }
-
 function setupParallax() {
   if (scrollHandler) { window.removeEventListener('scroll', scrollHandler); scrollHandler = null }
   const hero = appEl.querySelector('[data-parallax]')
   if (!hero || reduceMotion) return
   let ticking = false
-  scrollHandler = () => {
-    if (ticking) return
-    ticking = true
-    requestAnimationFrame(() => {
-      const y = window.scrollY || window.pageYOffset || 0
-      hero.style.transform = `translateY(${(y * 0.22).toFixed(1)}px)`
-      hero.style.opacity = String(Math.max(0, 1 - y / 340))
-      ticking = false
-    })
-  }
+  scrollHandler = () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { const y = window.scrollY || 0; hero.style.transform = `translateY(${(y * 0.22).toFixed(1)}px)`; hero.style.opacity = String(Math.max(0, 1 - y / 340)); ticking = false }) }
   window.addEventListener('scroll', scrollHandler, { passive: true })
 }
 
+/* ---------------- home ---------------- */
 function renderHome() {
   const nxt = nextDay()
+  const rd = readiness()
+  const ins = insights()
+
+  const readySel = ['fried', 'solid', 'primed'].map(l =>
+    `<button class="rd ${rd.level === l ? 'on ' + l : ''}" data-ready="${l}">${READY[l]}</button>`).join('')
+  const readyLine = rd.source === 'oura'
+    ? `Oura says <b>${READY[rd.level]}</b> — targets adjusted.`
+    : rd.source === 'you' ? `You logged <b>${READY[rd.level]}</b> — targets adjusted.` : `Tap how you feel and every target adjusts.`
+
   const cards = ORDER.map((id, ix) => {
     const d = DAYS[id]
-    const total = flat(id).length
-    const done = doneCount(id)
+    const list = flat(id)
+    const done = Object.keys(store.session[id] || {}).filter(k => store.session[id][k].done).length
     let badge = ''
-    if (done > 0) badge = `<span class="badge prog num">${done}/${total}</span>`
+    if (done > 0) badge = `<span class="badge prog num">${done}/${list.length}</span>`
     else if (id === nxt) badge = `<span class="badge next">Up next</span>`
+    const trained = (store.history[id] && store.history[id][0]) ? '' : `<span class="est">new</span>`
     return `<button class="daycard glass reveal ${id === nxt && done === 0 ? 'next' : ''}" data-day="${id}" style="--i:${ix}">
-      <div class="dc-top">
-        <span class="dc-no">${d.no}</span>
-        <span class="dc-title">${esc(d.title)}</span>
-        ${badge}
-      </div>
+      <div class="dc-top"><span class="dc-no">${d.no}</span><span class="dc-title">${esc(d.title)}</span>${badge}</div>
       <div class="dc-sub">${esc(d.sub)} <span class="est">${esc(d.min)}</span></div>
     </button>`
   }).join('')
+
+  const insHtml = ins.length ? `
+    <div class="uplabel">What to watch</div>
+    ${ins.map(o => `<div class="insight glass reveal ${o.kind}"><div class="ins-k">${o.kind === 'stall' ? 'Stalled' : 'Flying'}</div><div class="ins-t">${esc(o.text)} <span class="m">${esc(o.fix)}</span></div></div>`).join('')}` : ''
 
   appEl.innerHTML = `
     <div class="app">
       <div class="hero" data-parallax>
         <div class="mono" style="margin-bottom:14px">${esc(PROGRAM)} / Recomposition</div>
-        <div class="word">Ready to<br><b>train.</b></div>
-        <div class="sub">Pick a session. Your last weights are saved, so you always walk in knowing the number to <b>beat</b>.</div>
+        <div class="word">Today's<br><b>numbers.</b></div>
+        <div class="sub">No blank sheet. Reps reads your history and hands you the <b>exact weight and reps</b> to hit — you just show up and beat them.</div>
       </div>
+
+      <div class="readycard glass reveal">
+        <div class="rd-head"><span class="k">Readiness</span><span class="rd-src">${readyLine}</span></div>
+        <div class="rd-row">${readySel}</div>
+      </div>
+
       <div class="uplabel">Your week &mdash; up next is <b>${esc(DAYS[nxt].title)}</b></div>
       ${cards}
+      ${insHtml}
       <div class="homelinks">
-        <button class="linkcard glass reveal" style="--i:5" data-go="guide">
-          <div class="k">Reference</div>
-          <div class="t">Guide &amp; fuel</div>
-          <div class="d">Principles, shoulder rules, how to progress, nutrition, conditioning.</div>
+        <button class="linkcard glass reveal" data-go="guide">
+          <div class="k">Reference</div><div class="t">The engine &amp; fuel</div>
+          <div class="d">How the coach decides your numbers, plus shoulder rules, nutrition, conditioning.</div>
         </button>
       </div>
-      <div class="foot"><b>Start lighter than you think.</b> The first weeks are about showing up four times a week and grooving the movements. Everything is saved on this device.</div>
+      <div class="foot"><b>Start honest.</b> Log what you actually lift — the weights you enter are what tomorrow's targets are built from. Everything is saved on this device.</div>
     </div>`
 
-  appEl.querySelectorAll('.daycard').forEach(el =>
-    el.addEventListener('click', () => nav('day', el.dataset.day)))
+  appEl.querySelectorAll('.daycard').forEach(el => el.addEventListener('click', () => nav('day', el.dataset.day)))
   appEl.querySelector('[data-go="guide"]').addEventListener('click', () => nav('guide'))
+  appEl.querySelectorAll('[data-ready]').forEach(el => el.addEventListener('click', () => {
+    store.readiness[today()] = el.dataset.ready; save(); render()
+  }))
 }
 
-function loadTag(e) {
-  if (e.during) return `<span class="ex-load num">${esc(e.s)} <span>x</span> ${esc(e.r)}</span>`
-  return `<span class="ex-load num">${esc(e.s)} <span>x</span> ${esc(e.r)}</span>`
+/* ---------------- day ---------------- */
+function stateChip(s) {
+  const map = { up: ['Progress', 'up'], hold: ['Hold', 'hold'], ease: ['Recover', 'ease'], repeat: ['Repeat', 'repeat'], deload: ['Deload', 'deload'], new: ['New lift', 'new'] }
+  const [label, cls] = map[s] || ['', 'new']
+  return `<span class="chip ${cls}">${label}</span>`
 }
 
 function renderDay() {
   const d = DAYS[active]
   const list = flat(active)
-  const checks = store.checks[active] || {}
-  const cur = store.cur[active] || {}
-  const last = store.last[active] || {}
+  const sess = store.session[active] || {}
 
   let i = 0
   const blocksHtml = d.blocks.map(b => {
     const rows = []
-    for (const e of b.ex) { rows.push(exRow(e, i, checks, cur, last, false)); i++ }
-    if (b.during) { rows.push(exRow({ ...b.during, g: null }, i, checks, cur, last, true)); i++ }
+    for (const e of b.ex) { rows.push(exRow(e, i, sess, false)); i++ }
+    if (b.during) { rows.push(exRow({ ...b.during, g: null }, i, sess, true)); i++ }
     return `<div class="block ${b.opt ? 'opt' : ''}">
       <div class="block-head"><span class="block-key">${esc(b.key)}</span><span class="block-kind">${esc(b.kind)}</span></div>
-      ${rows.join('')}
-    </div>`
+      ${rows.join('')}</div>`
   }).join('')
 
   appEl.innerHTML = `
     <div class="app">
-      <div class="topbar">
-        <button class="bar-btn" data-back><span class="chev">&lsaquo;</span> Week</button>
-        <div class="grow"></div>
-      </div>
+      <div class="topbar"><button class="bar-btn" data-back><span class="chev">&lsaquo;</span> Week</button><div class="grow"></div></div>
       <div class="day-hd reveal">
         <h2>${esc(d.title)}</h2>
         <div class="sub">${esc(d.sub)}</div>
-        <div class="meta">
-          <span class="pill amber">${esc(d.min)} on the floor</span>
-          <span class="pill"><b>${list.length}</b> movements</span>
-        </div>
+        <div class="meta"><span class="pill amber">${esc(d.min)} on the floor</span><span class="pill"><b>${list.length}</b> movements</span><span class="pill">Readiness: <b>${READY[readiness().level]}</b></span></div>
       </div>
       ${blocksHtml}
       <div class="finish">
         <button class="btn" data-finish>Finish &amp; save</button>
-        <div class="hint">Saves today's weights as your targets for next ${esc(d.title)}, then clears the checkmarks for a fresh start.</div>
+        <div class="hint">Banks what you logged as history, so next ${esc(d.title)} opens with fresh targets. Then clears the board.</div>
         <button class="btn ghost" data-reset>Discard this session</button>
       </div>
     </div>`
 
   appEl.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', () => nav('home')))
-  appEl.querySelectorAll('[data-finish]').forEach(el => el.addEventListener('click', finishDay))
-  appEl.querySelector('[data-reset]').addEventListener('click', resetDay)
-
-  appEl.querySelectorAll('.ex-tap').forEach(el => el.addEventListener('click', () => {
-    const idx = el.dataset.idx
-    const c = (store.checks[active] ||= {})
-    const now = !c[idx]
-    if (now) c[idx] = 1; else delete c[idx]
-    save()
-    const ex = el.closest('.ex')
-    ex.classList.toggle('done', now)
-    el.setAttribute('aria-pressed', String(now))
-  }))
-
-  appEl.querySelectorAll('.loginput').forEach(el => el.addEventListener('input', () => {
-    const idx = el.dataset.idx
-    const cc = (store.cur[active] ||= {})
-    const v = el.value.trim()
-    if (v) cc[idx] = v; else delete cc[idx]
-    save()
-  }))
+  appEl.querySelector('[data-finish]').addEventListener('click', finishDay)
+  appEl.querySelector('[data-reset]').addEventListener('click', () => { delete store.session[active]; save(); render() })
+  wireRows()
 }
 
-function exRow(e, idx, checks, cur, last, during) {
-  const done = !!checks[idx]
-  const g = during
-    ? `<span class="ex-g rest-tag">During rest</span>`
-    : (e.g ? `<span class="ex-g">${esc(e.g)}</span>` : '')
-  const lastVal = last[idx]
-  const curVal = cur[idx] || ''
+function exRow(e, idx, sess, during) {
+  const rx = prescribe(active, idx, e)
+  const logged = sess[idx]
+  const done = logged && logged.done
+  const g = during ? `<span class="ex-g rest-tag">During rest</span>` : (e.g ? `<span class="ex-g">${esc(e.g)}</span>` : '')
+
+  // The prescription headline
+  let head
+  if (rx.unit === 'time') head = `<span class="rx-w">${rx.reps}s</span>`
+  else if (rx.weight == null) head = `<span class="rx-w new">Choose weight</span><span class="rx-x">&times; ${rx.reps}${rx.pr.perSide ? '/side' : ''}</span>`
+  else head = `<span class="rx-w">${rx.weight}<span class="u">lb</span></span><span class="rx-x">&times; ${rx.reps}${rx.pr.perSide ? '/side' : ''}</span>`
+
+  // Log fields (prefilled to the prescription)
+  const wVal = logged ? logged.w : (rx.weight != null ? rx.weight : '')
+  const rVal = logged ? logged.r : rx.reps
+  const fields = rx.unit === 'time'
+    ? `<input class="lf lf-r" data-idx="${idx}" inputmode="numeric" value="${rVal}" aria-label="seconds"><span class="lf-u">sec</span>`
+    : `<input class="lf lf-w" data-idx="${idx}" inputmode="decimal" value="${wVal}" placeholder="wt" aria-label="weight"><span class="lf-x">&times;</span><input class="lf lf-r" data-idx="${idx}" inputmode="numeric" value="${rVal}" aria-label="reps">`
+
   return `<div class="ex glass ${done ? 'done' : ''} ${during ? 'during' : ''}" data-idx="${idx}">
-    <button class="ex-tap" data-idx="${idx}" aria-pressed="${done}">
-      <span class="tick"></span>
-      <span class="ex-body">
-        <span class="ex-top">${g}<span class="ex-name">${esc(e.n)}</span></span>
-        ${e.note ? `<span class="ex-note">${esc(e.note)}</span>` : ''}
-      </span>
-    </button>
-    ${loadTag(e)}
-    <div class="logline">
-      <span class="loglast">${lastVal ? `last <b>${esc(lastVal)}</b>` : 'log'}</span>
-      <input class="loginput" data-idx="${idx}" type="text" inputmode="text" autocomplete="off"
-             placeholder="${lastVal ? esc(lastVal) : 'weight x reps'}" value="${esc(curVal)}" />
+    <div class="ex-main">
+      <div class="ex-body"><div class="ex-top">${g}<span class="ex-name">${esc(e.n)}</span>${during ? '' : stateChip(rx.state)}</div>
+      ${e.note ? `<div class="ex-note">${esc(e.note)}</div>` : ''}</div>
+      <div class="ex-scheme num">${esc(e.s)} <span>&times;</span> ${esc(e.r)}</div>
+    </div>
+    <div class="rx">
+      <div class="rx-head">${head}</div>
+      <div class="rx-why">${esc(rx.why)}</div>
+    </div>
+    <div class="logrow">
+      <div class="lf-wrap">${fields}</div>
+      <button class="hit" data-hit="${idx}" aria-pressed="${done ? 'true' : 'false'}">${done ? 'Logged' : 'Hit it'}</button>
     </div>
   </div>`
 }
 
+function wireRows() {
+  appEl.querySelectorAll('.hit').forEach(btn => btn.addEventListener('click', () => {
+    const idx = btn.dataset.hit
+    const ex = document.querySelector(`.ex[data-idx="${idx}"]`)
+    const wEl = ex.querySelector('.lf-w'), rEl = ex.querySelector('.lf-r')
+    const w = wEl ? parseFloat(wEl.value) : null
+    const r = parseInt(rEl.value, 10)
+    if ((wEl && !(w > 0)) || !(r > 0)) { ex.classList.add('nudge'); setTimeout(() => ex.classList.remove('nudge'), 400); return }
+    const s = (store.session[active] ||= {})
+    const was = s[idx] && s[idx].done
+    if (was) { delete s[idx]; ex.classList.remove('done'); btn.textContent = 'Hit it'; btn.setAttribute('aria-pressed', 'false') }
+    else { s[idx] = { w: wEl ? w : null, r, done: true }; ex.classList.add('done'); btn.textContent = 'Logged'; btn.setAttribute('aria-pressed', 'true') }
+    save()
+  }))
+}
+
 function finishDay() {
   const id = active
-  const cur = store.cur[id] || {}
-  const last = (store.last[id] ||= {})
-  for (const k of Object.keys(cur)) if (cur[k]) last[k] = cur[k]
-  delete store.checks[id]
-  delete store.cur[id]
+  const sess = store.session[id] || {}
+  const H = (store.history[id] ||= {})
+  const t = today()
+  Object.keys(sess).forEach(k => {
+    if (!sess[k].done) return
+    const arr = (H[k] ||= [])
+    arr.push({ d: t, w: sess[k].w, r: sess[k].r })
+    if (arr.length > 8) arr.shift()
+  })
+  delete store.session[id]
   store.lastFinished = id
   save()
   nav('home')
 }
 
-function resetDay() {
-  delete store.checks[active]
-  delete store.cur[active]
-  save()
-  render()
-}
-
 /* ---------------- guide ---------------- */
 function renderGuide() {
   const cond = [
-    ['Dose', '<b>2-3x / week, ~15-20 min</b>, on non-lifting days or after a lift (never before). Keep it genuinely easy - it should not leave you too sore to train.'],
-    ['Base', '<b>Zone 2, conversational pace</b> - you can talk in full sentences. The pool swim or water jog is the standout low-impact option and gives the shoulder a full break. Incline walk, bike, or elliptical also work.'],
-    ['Hard', '<b>Intervals, once a week at most.</b> Swap one zone-2 session for 6-10 rounds of ~20-30s harder / ~60-90s easy on the bike or in the pool. A garnish, not the main dish.'],
-    ['Note', '<b>Favor the pool, bike, and incline walk</b> over anything that loads the arms overhead. If freestyle bugs the shoulder, switch to flutter-kick with a board.'],
+    ['Dose', '<b>2-3x / week, ~15-20 min</b>, on non-lifting days or after a lift. Keep it easy enough that it never leaves you too sore to train.'],
+    ['Base', '<b>Zone 2, conversational pace.</b> The pool swim or water jog is the best low-impact option and gives the shoulder a full break.'],
+    ['Hard', '<b>Intervals, once a week at most.</b> 6-10 rounds of ~20-30s harder / ~60-90s easy on the bike or in the pool.'],
+    ['Note', '<b>Favor the pool, bike, and incline walk</b> over anything overhead. If freestyle bugs the shoulder, flutter-kick with a board.'],
   ]
   appEl.innerHTML = `
     <div class="app">
-      <div class="topbar">
-        <button class="bar-btn" data-back><span class="chev">&lsaquo;</span> Week</button>
-        <div class="grow"></div>
-        <span class="bar-title">Guide</span>
-      </div>
+      <div class="topbar"><button class="bar-btn" data-back><span class="chev">&lsaquo;</span> Week</button><div class="grow"></div><span class="bar-title">Guide</span></div>
 
-      <div class="sec-head"><span class="idx">00</span><h3>The two levers</h3></div>
-      <div class="levers">
-        <div class="lever glass reveal"><div class="k">The gym</div><h4>Progressive overload</h4><p>Lift hard, add weight or reps over time. The signal that tells your body to keep the muscle - and build more.</p></div>
-        <div class="lever glass reveal"><div class="k">The kitchen</div><h4>Slight deficit, high protein</h4><p>Fat loss is decided here, not on the treadmill. Eat a little under maintenance, keep protein high, fat comes off while muscle stays.</p></div>
-      </div>
-
-      <div class="sec-head"><span class="idx">01</span><h3>How the hour works</h3></div>
+      <div class="sec-head"><span class="idx">00</span><h3>How the coach decides</h3></div>
       <div class="note-card glass reveal">
-        <p class="lead"><b>Supersets beat the clock.</b> Movements share a letter (A1 / A2) - do a set of A1, ~60-90s rest, a set of A2, repeat. One muscle recovers while its partner works.</p>
-        <div class="timemap">
-          <span class="tm">Upper A <b>~44m</b></span><span class="tm">Lower A <b>~43m</b></span><span class="tm">Upper B <b>~44m</b></span><span class="tm">Lower B <b>~43m</b></span>
+        <p class="lead">You don't run the math — the app does. Every session it reads your last log and sets today's target:</p>
+        <div class="rows">
+          <div class="row"><span class="lead">Up</span><span class="txt"><span class="m">Hit the <b>top</b> of the rep range last time? It adds weight and resets reps to the bottom.</span></span></div>
+          <div class="row"><span class="lead">Hold</span><span class="txt"><span class="m">Landed <b>mid-range</b>? Same weight, beat your reps by one.</span></span></div>
+          <div class="row"><span class="lead">Reset</span><span class="txt"><span class="m">Missed the bottom <b>twice</b>? It deloads ~10% so you can rebuild with momentum.</span></span></div>
+          <div class="row"><span class="lead steel">Ready</span><span class="txt"><span class="m">Logged <b>Fried</b> (or Oura says so)? It eases the load and skips the jump — hammer next time.</span></span></div>
         </div>
-        <p class="lead" style="margin:0">Each includes a 5-min warm-up. On a busy floor, budget 45-48. Run long? Cut the Upper A arm pair (D) first. The heavy lower-day lift is straight sets with core folded into the rest, so core never gets skipped.</p>
+      </div>
+
+      <div class="sec-head"><span class="idx">01</span><h3>The two levers</h3></div>
+      <div class="levers">
+        <div class="lever glass reveal"><div class="k">The gym</div><h4>Progressive overload</h4><p>Lift hard, add over time. The coach drives this for you — your only job is to log honestly and chase the target.</p></div>
+        <div class="lever glass reveal"><div class="k">The kitchen</div><h4>Slight deficit, high protein</h4><p>Fat loss is decided here. Eat a little under maintenance, keep protein high, fat comes off while muscle stays.</p></div>
       </div>
 
       <div class="sec-head"><span class="idx">02</span><h3>Shoulder rules</h3></div>
-      <div class="callout reveal">
-        <div class="k">Every session</div>
-        <p><b>Press to controlled depth, not a deep stretch</b> (elbows to torso level, no lower). <b>Raises and overhead work stay under the painful arc.</b> If a movement is sharp pain rather than muscle fatigue, stop and use the pec-deck / seated-machine-press fallbacks. This manages around a sensitive shoulder - it does not replace a clinician's look.</p>
-      </div>
+      <div class="callout reveal"><div class="k">Every session</div>
+        <p><b>Press to controlled depth, not a deep stretch.</b> <b>Raises and overhead stay under the painful arc.</b> Sharp pain (not fatigue) means stop and use the pec-deck / seated-machine fallback. This manages around a sensitive shoulder — it doesn't replace a clinician.</p></div>
 
       <div class="sec-head"><span class="idx">03</span><h3>Fuel</h3></div>
       <div class="note-card glass reveal"><div class="rows">
-        <div class="row"><span class="lead">01</span><span class="txt"><b>Slight deficit.</b> <span class="m">~250-500 kcal under maintenance - or maintenance while you are new, since beginners recomp well. Do not crash it.</span></span></div>
-        <div class="row"><span class="lead">02</span><span class="txt"><b>Protein first.</b> <span class="m">~0.8-1 g per lb of bodyweight, every day. It is what protects muscle in a deficit.</span></span></div>
-        <div class="row"><span class="lead">03</span><span class="txt"><b>Build the plate.</b> <span class="m">Protein + vegetables + a fist or two of carbs around training. Mostly whole foods.</span></span></div>
-        <div class="row"><span class="lead">04</span><span class="txt"><b>Sleep 7-9 hours.</b> <span class="m">Muscle is built during recovery, not during the set.</span></span></div>
+        <div class="row"><span class="lead">01</span><span class="txt"><b>Slight deficit.</b> <span class="m">~250-500 kcal under maintenance, or maintenance while you're new. Don't crash it.</span></span></div>
+        <div class="row"><span class="lead">02</span><span class="txt"><b>Protein first.</b> <span class="m">~0.8-1 g per lb of bodyweight, every day.</span></span></div>
+        <div class="row"><span class="lead">03</span><span class="txt"><b>Sleep 7-9 hours.</b> <span class="m">Muscle is built in recovery — and it's what the readiness dial reads.</span></span></div>
       </div></div>
 
-      <div class="sec-head"><span class="idx">04</span><h3>How to progress</h3></div>
-      <div class="note-card glass reveal"><div class="rows">
-        <div class="row"><span class="lead">1</span><span class="txt"><span class="m">Pick a weight you can hit the <b>bottom</b> of the rep range with clean form.</span></span></div>
-        <div class="row"><span class="lead">2</span><span class="txt"><span class="m">Add reps each session until you hit the <b>top</b> of the range on every set, two sessions running.</span></span></div>
-        <div class="row"><span class="lead">3</span><span class="txt"><span class="m">Then add the <b>smallest increment</b> and drop back to the bottom.</span></span></div>
-        <div class="row"><span class="lead">4</span><span class="txt"><span class="m"><b>Log every set</b> - that is what the weight fields on each exercise are for. The log is the progression engine.</span></span></div>
-      </div></div>
-
-      <div class="sec-head"><span class="idx">05</span><h3>Reading the results</h3></div>
-      <div class="note-card glass reveal"><div class="rows">
-        <div class="row"><span class="lead steel">Daily</span><span class="txt"><b>Bodyweight</b> <span class="m">- same time each morning. Watch the weekly average, ignore daily noise.</span></span></div>
-        <div class="row"><span class="lead steel">Weekly</span><span class="txt"><b>Logbook</b> <span class="m">- your numbers should climb. The clearest sign it is working.</span></span></div>
-        <div class="row"><span class="lead steel">Monthly</span><span class="txt"><b>Photos</b> <span class="m">- one set every 4 weeks, same spot and light.</span></span></div>
-        <div class="row"><span class="lead steel">8-12 wks</span><span class="txt"><b>The verdict.</b> <span class="m">Strength up while weight holds or slowly drops = recomposition is happening.</span></span></div>
-      </div></div>
-
-      <div class="sec-head"><span class="idx">06</span><h3>Conditioning</h3></div>
+      <div class="sec-head"><span class="idx">04</span><h3>Conditioning</h3></div>
       <div class="note-card glass reveal"><div class="rows">
         ${cond.map(([l, t]) => `<div class="row"><span class="lead steel" style="width:56px">${l}</span><span class="txt">${t}</span></div>`).join('')}
       </div></div>
 
-      <div class="foot"><b>Base Block.</b> When strength stops climbing for a couple of weeks, it is time to rebuild the block - just ask.</div>
+      <div class="foot"><b>Base Block.</b> When "What to watch" starts flagging stalls across the board, the block's done its job — time to rebuild it. Just ask.</div>
     </div>`
-
   appEl.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', () => nav('home')))
 }
 
