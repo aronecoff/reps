@@ -4,9 +4,9 @@ A local-first workout app. Opens to the session you're training, remembers last
 week's weights so you know the number to beat, and logs as you go. Installable
 PWA, all data in the browser (localStorage). No backend, no accounts, no keys.
 
-The current program is **Base Block** — a 4-day Upper/Lower recomposition block
-(no barbell bench, ~45-minute sessions built around antagonist supersets),
-authored for the Dogpatch YMCA.
+The current program is a **Push / Pull / Legs** split, 5 days a week with legs
+once (Push · Pull · Legs · Push · Pull), shoulder-friendly (no barbell bench),
+for the Dogpatch YMCA.
 
 ## Run
 

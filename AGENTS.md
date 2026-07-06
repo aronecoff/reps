@@ -15,9 +15,11 @@ macOS Dock wrapper (`desktop/`) just loads the deployed URL in a WKWebView.
 
 ## Where things live
 - `src/main.js` — the whole app. The training program is the `DAYS` object near
-  the top (each day → blocks → exercises with `{ g, n, s, r, note }`). Views are
-  `renderHome` / `renderDay` / `renderGuide`. Logging + "last weight" memory is
-  the `store` object (localStorage).
+  the top: a Push/Pull/Legs split keyed `push1/pull1/legs/push2/pull2`, each with
+  an `ex` array of `{ n, s, r, inc }`. Views are `renderHome` / `renderDay` /
+  `renderGuide`. `prescribe()` turns history into today's target weight; the
+  `store` object (localStorage key `reps.v3`) holds history/session/readiness/
+  oura/watch.
 - `src/style.css` — the liquid-glass design system (tokens at `:root`, `.glass`
   primitive, view transitions, reveal-on-scroll). WebKit-tuned (iPhone + Dock
   app), so avoid Chromium-only CSS; keep `-webkit-` prefixes on `backdrop-filter`.
