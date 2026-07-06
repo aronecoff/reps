@@ -100,8 +100,30 @@ function read() { try { return JSON.parse(localStorage.getItem(KEY)) || {} } cat
 store.history ||= {}     // history[dayId][idx] = [{ d, w, r }]  (oldest -> newest)
 store.session ||= {}     // session[dayId][idx] = { w, r, done }  (in progress today)
 store.readiness ||= {}   // readiness[YYYY-MM-DD] = 'fried' | 'solid' | 'primed'
-store.oura ||= {}        // oura[YYYY-MM-DD] = { level } — drop-in slot for the Vitals/Oura feed
+store.oura ||= {}        // oura[YYYY-MM-DD] = { level, score } — fed on-device by the "Reps Readiness" iOS Shortcut
+store.watch ||= {}       // watch[YYYY-MM-DD] = { dur, hr, cal } — fed on-device by the "Reps Session" iOS Shortcut
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)) } catch {} }
+
+// On-device conduits: iOS Shortcuts read Oura + Apple Watch on the phone and
+// hand values to the app via URL query params. Nothing leaves the device; we
+// store them and scrub the URL so nothing persists in Safari history.
+function ingestFromURL() {
+  const p = new URLSearchParams(location.search)
+  let touched = false
+  const raw = p.get('readiness')
+  if (raw != null) {
+    const n = parseInt(raw, 10)
+    if (Number.isFinite(n) && n >= 0 && n <= 100) {
+      store.oura[today()] = { level: n < 70 ? 'fried' : n < 85 ? 'solid' : 'primed', score: n }
+      touched = true
+    }
+  }
+  if (p.get('wdur') != null) {
+    store.watch[today()] = { dur: parseInt(p.get('wdur'), 10) || 0, hr: parseInt(p.get('whr'), 10) || 0, cal: parseInt(p.get('wcal'), 10) || 0 }
+    touched = true
+  }
+  if (touched) { save(); if (history.replaceState) history.replaceState(null, '', location.pathname) }
+}
 
 function today() { return new Date().toISOString().slice(0, 10) }
 function round5(x) { return Math.max(5, Math.round(x / 5) * 5) }
@@ -116,8 +138,10 @@ function hist(dayId, i) { return ((store.history[dayId] || {})[i]) || [] }
 // Today's readiness — Oura feed if present, else the manual check-in, else neutral.
 function readiness() {
   const t = today()
-  if (store.oura[t]) return { level: store.oura[t].level, source: 'oura' }
+  // A manual tap is a deliberate override and wins for the day; otherwise the
+  // Oura score (fed by the Shortcut) is the truth; otherwise neutral.
   if (store.readiness[t]) return { level: store.readiness[t], source: 'you' }
+  if (store.oura[t]) return { level: store.oura[t].level, source: 'oura' }
   return { level: 'solid', source: 'default' }
 }
 const READY = { fried: 'Fried', solid: 'Solid', primed: 'Primed' }
@@ -236,9 +260,15 @@ function renderHome() {
 
   const readySel = ['fried', 'solid', 'primed'].map(l =>
     `<button class="rd ${rd.level === l ? 'on ' + l : ''}" data-ready="${l}">${READY[l]}</button>`).join('')
+  const oScore = (store.oura[today()] || {}).score
   const readyLine = rd.source === 'oura'
-    ? `Oura says <b>${READY[rd.level]}</b> — targets adjusted.`
-    : rd.source === 'you' ? `You logged <b>${READY[rd.level]}</b> — targets adjusted.` : `Tap how you feel and every target adjusts.`
+    ? `Oura <b>${oScore}</b> &middot; <b>${READY[rd.level]}</b> &mdash; targets set.`
+    : rd.source === 'you' ? `You set <b>${READY[rd.level]}</b> &mdash; targets set.` : `Tap how you feel, or pull it from Oura.`
+  const w = store.watch[today()]
+  const watchCard = w ? `<div class="watchcard glass reveal">
+      <span class="wc-k">Today on Apple Watch</span>
+      <div class="wc-stats"><span>${w.dur}<i>min</i></span><span>${w.hr}<i>bpm</i></span><span>${w.cal}<i>cal</i></span></div>
+    </div>` : ''
 
   const cards = ORDER.map((id, ix) => {
     const d = DAYS[id]
@@ -269,7 +299,9 @@ function renderHome() {
       <div class="readycard glass reveal">
         <div class="rd-head"><span class="k">Readiness</span><span class="rd-src">${readyLine}</span></div>
         <div class="rd-row">${readySel}</div>
+        <a class="mini-sync" href="shortcuts://run-shortcut?name=Reps%20Readiness">Pull from Oura</a>
       </div>
+      ${watchCard}
 
       <div class="uplabel">Your week &mdash; up next is <b>${esc(DAYS[nxt].title)}</b></div>
       ${cards}
@@ -324,6 +356,7 @@ function renderDay() {
       <div class="finish">
         <button class="btn" data-finish>Finish &amp; save</button>
         <div class="hint">Banks what you logged as history, so next ${esc(d.title)} opens with fresh targets. Then clears the board.</div>
+        <a class="btn ghost" href="shortcuts://run-shortcut?name=Reps%20Session">Pull stats from Apple Watch</a>
         <button class="btn ghost" data-reset>Discard this session</button>
       </div>
     </div>`
@@ -453,4 +486,5 @@ function renderGuide() {
   appEl.querySelectorAll('[data-back]').forEach(el => el.addEventListener('click', () => nav('home')))
 }
 
+ingestFromURL()
 render()

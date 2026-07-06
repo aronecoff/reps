@@ -369,3 +369,19 @@ h1, h2, h3, h4 { margin: 0; text-wrap: balance; font-weight: 700; letter-spacing
 .insight.fly .ins-k { color: var(--ok); background: rgba(95,197,150,0.16); }
 .ins-t { font-size: 0.9rem; color: var(--chalk); line-height: 1.45; }
 .ins-t .m { color: var(--muted); }
+
+/* ============ conduits (Oura + Apple Watch) ============ */
+/* anchors styled as buttons (shortcuts:// links) */
+a.btn { display: block; text-align: center; text-decoration: none; }
+
+/* readiness "pull from Oura" mini link */
+.mini-sync { display: inline-block; margin-top: 12px; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); text-decoration: none; }
+.mini-sync::before { content: "\21ba  "; color: var(--amber-2); }
+.mini-sync:hover { color: var(--amber-2); }
+
+/* Apple Watch "today's session" card */
+.watchcard { border-radius: 18px; padding: 15px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.wc-k { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--steel); }
+.wc-stats { display: flex; gap: 16px; }
+.wc-stats span { font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; color: var(--chalk); font-variant-numeric: tabular-nums; }
+.wc-stats i { font-style: normal; font-size: 0.62rem; font-weight: 500; color: var(--muted); margin-left: 3px; letter-spacing: 0.04em; }
