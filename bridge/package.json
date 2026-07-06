@@ -1,0 +1,12 @@
+{
+  "name": "jarvis-bridge",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "iMessage -> Claude Code bridge for the Reps app. Text an edit, it ships.",
+  "scripts": {
+    "start": "node watch.mjs",
+    "selftest": "node watch.mjs --selftest",
+    "reply-test": "node watch.mjs --reply-test"
+  }
+}

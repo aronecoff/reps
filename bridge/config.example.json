@@ -1,0 +1,8 @@
+{
+  "handle": "+15551234567",
+  "trigger": "reps:",
+  "model": "haiku",
+  "budgetUsd": 0.3,
+  "pollSeconds": 4,
+  "repo": ""
+}
