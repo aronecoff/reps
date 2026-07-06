@@ -37,7 +37,9 @@ else if (MODE !== '--selftest') { console.error('Missing bridge/config.json — 
 
 const TRIGGER = String(cfg.trigger).toLowerCase()
 const HANDLE = cfg.handle          // your iMessage address exactly as it appears (e.g. "+15551234567" or "you@icloud.com")
-const REPO = cfg.repo
+// Empty/omitted repo -> the repo this bridge lives in (the clone). So config
+// doesn't need a machine-specific absolute path.
+const REPO = (cfg.repo && String(cfg.repo).trim()) ? cfg.repo : join(HERE, '..')
 const POLL = Math.max(2, cfg.pollSeconds) * 1000
 
 // ---- sqlite (read-only) ----
