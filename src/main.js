@@ -204,9 +204,9 @@ function renderHome() {
       <div class="hero" data-parallax>
         <div class="mono" style="margin-bottom:14px">${esc(PROGRAM)} / Recomposition</div>
         <div class="word">Ready to<br><b>train.</b></div>
-        <div class="sub">Pick today's session. Last week's weights are remembered, so you always know the number to <b>beat</b>.</div>
+        <div class="sub">Pick a session. Your last weights are saved, so you always walk in knowing the number to <b>beat</b>.</div>
       </div>
-      <div class="uplabel">The week &mdash; up next is <b>${esc(DAYS[nxt].title)}</b></div>
+      <div class="uplabel">Your week &mdash; up next is <b>${esc(DAYS[nxt].title)}</b></div>
       ${cards}
       <div class="homelinks">
         <button class="linkcard glass reveal" style="--i:5" data-go="guide">
@@ -251,7 +251,6 @@ function renderDay() {
       <div class="topbar">
         <button class="bar-btn" data-back><span class="chev">&lsaquo;</span> Week</button>
         <div class="grow"></div>
-        <button class="bar-btn accent" data-finish>Finish</button>
       </div>
       <div class="day-hd reveal">
         <h2>${esc(d.title)}</h2>
@@ -263,9 +262,9 @@ function renderDay() {
       </div>
       ${blocksHtml}
       <div class="finish">
-        <button class="btn" data-finish>Finish workout</button>
-        <div class="hint">Saves your logged weights as the numbers to beat next ${esc(d.title)}, and clears the checkmarks.</div>
-        <button class="btn ghost" data-reset>Reset without saving</button>
+        <button class="btn" data-finish>Finish &amp; save</button>
+        <div class="hint">Saves today's weights as your targets for next ${esc(d.title)}, then clears the checkmarks for a fresh start.</div>
+        <button class="btn ghost" data-reset>Discard this session</button>
       </div>
     </div>`
 
